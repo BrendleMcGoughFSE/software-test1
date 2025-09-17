@@ -12,16 +12,48 @@ export default function Dashboard(){
     setCustomers(d.customers||[]); setProjects(d.projects||[]); setFiles(d.files||[]);
   };
   useEffect(()=>{refresh();},[]);
+const createCustomer = async (e) => {
+  e.preventDefault();
+  const formEl = e.currentTarget;                 // capture BEFORE any await
+  const fd = new FormData(formEl);
+  const name = fd.get('name');
 
-  const createCustomer=async(e)=>{e.preventDefault();
-    const form=new FormData(e.currentTarget);
-    await fetch('/api/customer',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:form.get('name')})});
-    e.currentTarget.reset(); refresh();
-  };
-  const createProject=async(e)=>{e.preventDefault();
-    const f=new FormData(e.currentTarget);
-    await fetch('/api/project',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({customer_id:f.get('customer_id'),name:f.get('name')})});
-    e.currentTarget.reset(); refresh();
+  try {
+    const r = await fetch('/api/customer', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name })
+    });
+    if (!r.ok) throw new Error(await r.text());
+  } catch (err) {
+    alert('Create customer failed: ' + (err.message || err));
+  } finally {
+    formEl?.reset();                              // safe even if component re-rendered
+    refresh();                                    // re-fetch table data
+  }
+};
+const createProject = async (e) => {
+  e.preventDefault();
+  const formEl = e.currentTarget;
+  const fd = new FormData(formEl);
+  const customer_id = fd.get('customer_id');
+  const name = fd.get('name');
+
+  try {
+    const r = await fetch('/api/project', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ customer_id, name })
+    });
+    if (!r.ok) throw new Error(await r.text());
+  } catch (err) {
+    alert('Create project failed: ' + (err.message || err));
+  } finally {
+    formEl?.reset();
+    refresh();
+  }
+};
+
   };
 
   const showQR=async(slug)=>{
