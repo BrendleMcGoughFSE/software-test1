@@ -1,6 +1,6 @@
 // pages/api/init-upload.js
 import { createClient } from '@supabase/supabase-js';
-import { randomUUID } from 'crypto';
+import { v4 as uuidv4 } from 'uuid';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
@@ -13,7 +13,7 @@ export default async function handler(req, res) {
     const bucket = process.env.SUPABASE_BUCKET || 'reports';
     const supabase = createClient(url, key);
 
-    const slug = randomUUID().slice(0, 8);
+    const slug = uuidv4().slice(0, 8);
     const path = `uploads/${project_id}/${slug}/${Date.now()}-${filename}`;
 
     const { data, error } = await supabase.storage.from(bucket).createSignedUploadUrl(path);
