@@ -1,0 +1,21 @@
+*{box-sizing:border-box}
+body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;margin:0;padding:0;background:#f6f7fb;color:#111}
+.container{max-width:1000px;margin:0 auto;padding:20px}
+.card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:18px;margin:14px 0;box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.row{display:flex;gap:12px;flex-wrap:wrap}
+.col{flex:1 1 280px}
+label{display:block;font-weight:600;margin:10px 0 6px}
+input,select,textarea{width:100%;padding:10px;border:1px solid #d1d5db;border-radius:8px;background:#fff}
+button{border:none;border-radius:10px;padding:12px 16px;font-weight:700;cursor:pointer}
+button.primary{background:#111;color:#fff}
+button.ghost{background:#eef2ff;color:#111}
+h1{margin:0 0 12px}
+.small{color:#6b7280;font-size:12px}
+table{width:100%;border-collapse:collapse}
+th,td{padding:10px;border-bottom:1px solid #e5e7eb;text-align:left}
+.preview{border:1px solid #e5e7eb;border-radius:8px;padding:12px;background:#fff}
+.qr img{border:1px solid #e5e7eb;border-radius:8px;max-width:180px}
+.header{display:flex;align-items:center;gap:12px}
+.header img{height:46px}
+hr{border:none;border-top:1px solid #e5e7eb;margin:12px 0}
+.sig-line{border-bottom:1px solid #111; height:0; margin:8px 0 2px}
