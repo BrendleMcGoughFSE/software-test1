@@ -4,7 +4,6 @@ export default async function handler(req, res) {
   try {
     const url = process.env.SUPABASE_URL;
     const key = process.env.SUPABASE_SERVICE_ROLE;
-    const bucket = process.env.SUPABASE_BUCKET || 'reports';
 
     if (!url || !key) {
       return res.status(500).json({ error: 'Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE' });
@@ -23,8 +22,11 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'Supabase query failed: ' + err });
     }
 
-    // Sanity include of bucket name in response helps you verify config quickly
-    res.json({ bucket, customers: c.data || [], projects: p.data || [], files: f.data || [] });
+    res.json({
+      customers: c.data || [],
+      projects: p.data || [],
+      files: f.data || []
+    });
   } catch (e) {
     res.status(500).json({ error: e.message || 'Unexpected server error' });
   }
