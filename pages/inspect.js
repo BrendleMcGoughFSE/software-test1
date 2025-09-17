@@ -1,3 +1,18 @@
+import { useEffect, useRef, useState } from 'react';
+import SignaturePad from 'signature_pad';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+import QRCode from 'qrcode';
+
+export default function Inspect() {
+  // ...your code...
+  return (
+    <div className="container">
+      {/* ...UI... */}
+    </div>
+  );
+}
+
 const upload = async () => {
   if (!form.project_id) return alert('Select a project for association.');
   setUploading(true);
