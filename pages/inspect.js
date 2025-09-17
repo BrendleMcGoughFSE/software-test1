@@ -87,11 +87,40 @@ export default function Inspect() {
 
   const onChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
+  // Turn off external <link rel="stylesheet"> while we snapshot, then restore
+const disableCrossOriginStyles = () => {
+  const disabled = [];
+  for (const sheet of Array.from(document.styleSheets)) {
+    try {
+      // Accessing cssRules on cross-origin throws
+      void sheet.cssRules; // probe
+    } catch {
+      // sheet.ownerNode is the <link> tag
+      if (sheet.ownerNode && sheet.ownerNode.tagName === 'LINK') {
+        sheet.ownerNode.disabled = true;
+        disabled.push(sheet.ownerNode);
+      }
+    }
+  }
+  return () => {
+    disabled.forEach(node => { node.disabled = false; });
+  };
+};
+
   // Render the on-screen preview DOM to a PDF; if slug provided, also draw QR onto the PDF
-  const generatePDF = async (slugOrNull) => {
-    if (!libsReady) throw new Error('Libraries not ready yet');
+const generatePDF = async (slugOrNull) => {
+  if (!libsReady) throw new Error('Libraries not ready yet');
+
+  // NEW: temporarily disable cross-origin styles
+  const restore = disableCrossOriginStyles();
+  try {
     const node = previewRef.current;
-    const canvas = await html2canvas(node, { scale: 2 });
+    const canvas = await html2canvas(node, {
+      scale: 2,
+      useCORS: true,       // try to load CORS-enabled images
+      allowTaint: true,    // tolerate tainted canvases if needed
+      logging: false
+    });
     const img = canvas.toDataURL('image/png');
 
     const pdf = new jsPDF('p', 'pt', 'letter');
@@ -101,14 +130,12 @@ export default function Inspect() {
 
     pdf.addImage(img, 'PNG', 30, 30, contentW, imgH);
 
-    // Optional QR overlay (top-right) if we already know the slug/URL
     if (slugOrNull && origin) {
       const url = `${origin}/r/${slugOrNull}`;
       const qr = await QRCode.toDataURL(url, { margin: 1, scale: 4 });
       pdf.addImage(qr, 'PNG', PW - 30 - 100, 30, 100, 100);
     }
 
-    // Handle multipage if preview taller than 1 page
     let remaining = imgH - (PH - 60);
     while (remaining > 0) {
       pdf.addPage();
@@ -117,7 +144,12 @@ export default function Inspect() {
       remaining -= (PH - 60);
     }
     return pdf;
-  };
+  } finally {
+    // ALWAYS restore styles
+    restore();
+  }
+};
+
 
   // Signed-upload flow: reserve a path + slug, upload to Supabase directly,
   // insert/update DB row, then regenerate PDF with embedded QR
