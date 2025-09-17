@@ -113,7 +113,6 @@ export default function Dashboard() {
     setQr({ slug, data });
   };
 
-  // ---------- UI ----------
   return (
     <div className="container">
       <div className="header"><img src="/logo.png" alt="Logo"/><h2>Dashboard</h2></div>
