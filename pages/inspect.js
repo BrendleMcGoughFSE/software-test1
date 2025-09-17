@@ -69,7 +69,7 @@ const upload = async () => {
     if (!d.ok) throw new Error(d.error || 'record-file update failed');
 
     // 9) Show result
-    const url = `${location.origin}/r/${slug}`;
+    const url = `${origin}/r/${slug}`;
     const qr = await QRCode.toDataURL(url, { margin: 1, scale: 6 });
     setResult({ slug, url, qr });
     window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
