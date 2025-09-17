@@ -2,12 +2,11 @@ const upload = async () => {
   if (!form.project_id) return alert('Select a project for association.');
   setUploading(true);
   try {
-    // 1) Make a preliminary PDF (without QR) so we can reserve slug & path
     const pdf0 = await generatePDF(null);
     const blob0 = new Blob([pdf0.output('arraybuffer')], { type: 'application/pdf' });
     const baseName = (form.facilityName || 'Report') + '.pdf';
 
-    // 2) Ask server for a signed upload URL + slug/path
+    // 1) get signed URL + slug
     let r = await fetch('/api/init-upload', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -15,18 +14,13 @@ const upload = async () => {
     });
     let d = await r.json();
     if (!d.ok) throw new Error(d.error || 'init-upload failed');
-
     const { slug, path, signedUrl } = d;
 
-    // 3) Upload the preliminary PDF directly to Supabase (bypasses Vercel size limits)
-    let put = await fetch(signedUrl, {
-      method: 'PUT',
-      headers: { 'content-type': 'application/pdf' },
-      body: blob0
-    });
+    // 2) upload preliminary PDF directly to Supabase
+    let put = await fetch(signedUrl, { method: 'PUT', headers: { 'content-type': 'application/pdf' }, body: blob0 });
     if (!put.ok) throw new Error('Upload to storage failed (preliminary).');
 
-    // 4) Create DB row after successful upload
+    // 3) create DB row
     r = await fetch('/api/record-file', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -36,30 +30,25 @@ const upload = async () => {
     if (!d.ok) throw new Error(d.error || 'record-file insert failed');
     const fileId = d.id;
 
-    // 5) Regenerate the PDF WITH the QR embedded (now that we have slug)
+    // 4) regenerate with QR
     const pdf = await generatePDF(slug);
     const blob = new Blob([pdf.output('arraybuffer')], { type: 'application/pdf' });
-    const newName = baseName;
 
-    // 6) Get another signed URL for the *final* PDF path (you can reuse slug)
+    // 5) new signed URL for the final file
     r = await fetch('/api/init-upload', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ project_id: form.project_id, filename: newName })
+      body: JSON.stringify({ project_id: form.project_id, filename: baseName })
     });
     d = await r.json();
     if (!d.ok) throw new Error(d.error || 'init-upload (final) failed');
     const { path: finalPath, signedUrl: finalSignedUrl } = d;
 
-    // 7) Upload the final PDF
-    put = await fetch(finalSignedUrl, {
-      method: 'PUT',
-      headers: { 'content-type': 'application/pdf' },
-      body: blob
-    });
+    // 6) upload final
+    put = await fetch(finalSignedUrl, { method: 'PUT', headers: { 'content-type': 'application/pdf' }, body: blob });
     if (!put.ok) throw new Error('Upload to storage failed (final).');
 
-    // 8) Update DB row to point at the final PDF path (slug stays the same)
+    // 7) update DB row to final path
     r = await fetch('/api/record-file', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -68,8 +57,8 @@ const upload = async () => {
     d = await r.json();
     if (!d.ok) throw new Error(d.error || 'record-file update failed');
 
-    // 9) Show result
-    const url = `${origin}/r/${slug}`;
+    // 8) show result
+    const url = `${location.origin}/r/${slug}`;
     const qr = await QRCode.toDataURL(url, { margin: 1, scale: 6 });
     setResult({ slug, url, qr });
     window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
@@ -79,3 +68,4 @@ const upload = async () => {
     setUploading(false);
   }
 };
+
