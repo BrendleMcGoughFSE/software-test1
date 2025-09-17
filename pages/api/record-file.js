@@ -1,4 +1,3 @@
-// pages/api/record-file.js
 import { createClient } from '@supabase/supabase-js';
 
 export default async function handler(req, res) {
@@ -8,6 +7,8 @@ export default async function handler(req, res) {
     const { action, project_id, slug, path, file_id } = req.body || {};
     const url = process.env.SUPABASE_URL;
     const key = process.env.SUPABASE_SERVICE_ROLE;
+    if (!url || !key) return res.status(500).json({ error: 'Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE' });
+
     const supabase = createClient(url, key);
 
     if (action === 'insert') {
@@ -38,3 +39,4 @@ export default async function handler(req, res) {
     res.status(500).json({ error: e.message || 'Unexpected server error' });
   }
 }
+
