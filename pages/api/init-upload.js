@@ -1,4 +1,3 @@
-// pages/api/init-upload.js
 import { createClient } from '@supabase/supabase-js';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -11,6 +10,8 @@ export default async function handler(req, res) {
     const url = process.env.SUPABASE_URL;
     const key = process.env.SUPABASE_SERVICE_ROLE;
     const bucket = process.env.SUPABASE_BUCKET || 'reports';
+    if (!url || !key) return res.status(500).json({ error: 'Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE' });
+
     const supabase = createClient(url, key);
 
     const slug = uuidv4().slice(0, 8);
@@ -19,7 +20,6 @@ export default async function handler(req, res) {
     const { data, error } = await supabase.storage.from(bucket).createSignedUploadUrl(path);
     if (error) return res.status(500).json({ error: error.message });
 
-    // no DB write yet — we only reserve a path + signed URL
     res.json({ ok: true, slug, path, signedUrl: data.signedUrl, bucket });
   } catch (e) {
     res.status(500).json({ error: e.message || 'Unexpected server error' });
